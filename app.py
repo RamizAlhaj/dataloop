@@ -5,6 +5,7 @@ from matplotlib.ticker import FuncFormatter
 from fpdf import FPDF
 import io
 import datetime
+import os
 
 st.set_page_config(page_title="Dataloop – Smart Report Generator", layout="wide")
 
@@ -28,34 +29,42 @@ def generate_pdf_v2(data, summary_df, top_bottom_df, area_perf):
     pdf = FPDF()
     pdf.add_page()
 
+    # Add Unicode font
+    font_path = "NotoSans-Regular.ttf"
+    if not os.path.isfile(font_path):
+        st.error("Missing required font file: NotoSans-Regular.ttf")
+        return None
+
+    pdf.add_font("Noto", "", font_path, uni=True)
+    pdf.set_font("Noto", '', 16)
+
     # Cover Page
-    pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "Dataloop – Business Area Summary Report", ln=True, align='C')
-    pdf.set_font("Arial", '', 12)
+    pdf.set_font("Noto", '', 12)
     today = datetime.date.today().strftime("%B %d, %Y")
     pdf.cell(0, 10, f"Date: {today}", ln=True, align='C')
     pdf.ln(10)
 
     # Summary Table
-    pdf.set_font("Arial", 'B', 12)
+    pdf.set_font("Noto", '', 12)
     pdf.cell(0, 10, "Monthly Summary by Business Area:", ln=True)
-    pdf.set_font("Arial", '', 10)
+    pdf.set_font("Noto", '', 10)
     for _, row in summary_df.iterrows():
         pdf.cell(0, 8, f"{row['Business Area']} ({row['Month']}): {int(row['Amount']):,} NIS", ln=True)
     pdf.ln(8)
 
     # Top and Bottom
-    pdf.set_font("Arial", 'B', 12)
+    pdf.set_font("Noto", '', 12)
     pdf.cell(0, 10, "Top & Bottom Performers:", ln=True)
-    pdf.set_font("Arial", '', 10)
+    pdf.set_font("Noto", '', 10)
     for _, row in top_bottom_df.iterrows():
         pdf.cell(0, 8, f"{row['Label']}: {row['Business Area']} – {int(row['Amount']):,} NIS", ln=True)
     pdf.ln(8)
 
     # Scores & Recommendations
-    pdf.set_font("Arial", 'B', 12)
+    pdf.set_font("Noto", '', 12)
     pdf.cell(0, 10, "Performance Scores & Action Items:", ln=True)
-    pdf.set_font("Arial", '', 10)
+    pdf.set_font("Noto", '', 10)
     for area, row in area_perf.iterrows():
         score = row['Score']
         msg = f"{area}: Score {score}/10. "
@@ -69,9 +78,9 @@ def generate_pdf_v2(data, summary_df, top_bottom_df, area_perf):
     pdf.ln(8)
 
     # Detailed Records
-    pdf.set_font("Arial", 'B', 12)
+    pdf.set_font("Noto", '', 12)
     pdf.cell(0, 10, "Detailed Records:", ln=True)
-    pdf.set_font("Arial", '', 10)
+    pdf.set_font("Noto", '', 10)
     for _, row in data.iterrows():
         pdf.cell(0, 8, f"Business Area: {row['Business Area']}", ln=True)
         pdf.cell(0, 8, f"Date: {row['Date']} | Amount: {int(row['Amount']):,} NIS", ln=True)
@@ -169,4 +178,5 @@ if uploaded_file:
         st.subheader("📄 Generate PDF")
         if st.button("Download PDF Report"):
             pdf_file = generate_pdf_v2(df, monthly, top_bottom_df, area_perf)
-            st.download_button("📅 Download Report", pdf_file, file_name="business_area_report.pdf", mime="application/pdf")
+            if pdf_file:
+                st.download_button("📅 Download Report", pdf_file, file_name="business_area_report.pdf", mime="application/pdf")
