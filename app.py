@@ -41,7 +41,7 @@ def generate_pdf_v2(data, summary_df, top_bottom_df, area_perf):
     pdf.cell(0, 10, "Monthly Summary by Business Area:", ln=True)
     pdf.set_font("Arial", '', 10)
     for _, row in summary_df.iterrows():
-        pdf.cell(0, 8, f"{row['Business Area']} ({row['Month']}): ₪{int(row['Amount']):,}", ln=True)
+        pdf.cell(0, 8, f"{row['Business Area']} ({row['Month']}): {int(row['Amount']):,} NIS", ln=True)
     pdf.ln(8)
 
     # Top and Bottom
@@ -49,7 +49,7 @@ def generate_pdf_v2(data, summary_df, top_bottom_df, area_perf):
     pdf.cell(0, 10, "Top & Bottom Performers:", ln=True)
     pdf.set_font("Arial", '', 10)
     for _, row in top_bottom_df.iterrows():
-        pdf.cell(0, 8, f"{row['Label']}: {row['Business Area']} – ₪{int(row['Amount']):,}", ln=True)
+        pdf.cell(0, 8, f"{row['Label']}: {row['Business Area']} – {int(row['Amount']):,} NIS", ln=True)
     pdf.ln(8)
 
     # Scores & Recommendations
@@ -74,7 +74,7 @@ def generate_pdf_v2(data, summary_df, top_bottom_df, area_perf):
     pdf.set_font("Arial", '', 10)
     for _, row in data.iterrows():
         pdf.cell(0, 8, f"Business Area: {row['Business Area']}", ln=True)
-        pdf.cell(0, 8, f"Date: {row['Date']} | Amount: ₪{int(row['Amount']):,}", ln=True)
+        pdf.cell(0, 8, f"Date: {row['Date']} | Amount: {int(row['Amount']):,} NIS", ln=True)
         pdf.multi_cell(0, 8, f"Insights: {row['Insights']}")
         pdf.ln(4)
 
@@ -110,7 +110,7 @@ if uploaded_file:
         plt.xticks(rotation=0)
         st.pyplot(fig1)
 
-        st.subheader("📊 Monthly Trend by Business Area")
+        st.subheader("📋 Monthly Trend by Business Area")
         monthly = df.groupby(['Month', 'Business Area'])['Amount'].sum().reset_index()
         fig2, ax2 = plt.subplots(figsize=(10, 5))
         for area in monthly['Business Area'].unique():
@@ -169,4 +169,4 @@ if uploaded_file:
         st.subheader("📄 Generate PDF")
         if st.button("Download PDF Report"):
             pdf_file = generate_pdf_v2(df, monthly, top_bottom_df, area_perf)
-            st.download_button("📥 Download Report", pdf_file, file_name="business_area_report.pdf", mime="application/pdf")
+            st.download_button("📅 Download Report", pdf_file, file_name="business_area_report.pdf", mime="application/pdf")
