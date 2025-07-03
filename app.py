@@ -5,7 +5,6 @@ from matplotlib.ticker import FuncFormatter
 from fpdf import FPDF
 import io
 import datetime
-import os
 
 st.set_page_config(page_title="Dataloop – Smart Report Generator", layout="wide")
 
@@ -16,71 +15,56 @@ def format_currency(x, pos):
 def generate_insights_v2(row):
     insights = []
     if row['Amount'] > 10000:
-        insights.append("High revenue segment – monitor closely for trends.")
+        insights.append("High revenue segment")
     if row['Amount'] < 2000:
-        insights.append("Low activity – consider evaluating business need.")
+        insights.append("Low activity")
     if row['Day'] in [5, 6]:
-        insights.append("High potential for weekend trends.")
+        insights.append("Weekend trend")
     if row['Month'] in [1, 8, 12]:
-        insights.append("Holiday month – consider seasonal marketing.")
-    return " • ".join(insights) if insights else "Normal range performance."
+        insights.append("Holiday month")
+    return " | ".join(insights) if insights else "Normal"
 
 def generate_pdf_v2(data, summary_df, top_bottom_df, area_perf):
     pdf = FPDF()
     pdf.add_page()
 
-    # Add Unicode font
-    font_path = "NotoSans-Regular.ttf"
-    if not os.path.isfile(font_path):
-        st.error("Missing required font file: NotoSans-Regular.ttf")
-        return None
-
-    pdf.add_font("Noto", "", font_path, uni=True)
-    pdf.set_font("Noto", '', 16)
+    # Use basic core font
+    pdf.set_font("Arial", '', 12)
 
     # Cover Page
     pdf.cell(0, 10, "Dataloop – Business Area Summary Report", ln=True, align='C')
-    pdf.set_font("Noto", '', 12)
     today = datetime.date.today().strftime("%B %d, %Y")
     pdf.cell(0, 10, f"Date: {today}", ln=True, align='C')
     pdf.ln(10)
 
     # Summary Table
-    pdf.set_font("Noto", '', 12)
     pdf.cell(0, 10, "Monthly Summary by Business Area:", ln=True)
-    pdf.set_font("Noto", '', 10)
     for _, row in summary_df.iterrows():
         pdf.cell(0, 8, f"{row['Business Area']} ({row['Month']}): {int(row['Amount']):,} NIS", ln=True)
     pdf.ln(8)
 
     # Top and Bottom
-    pdf.set_font("Noto", '', 12)
     pdf.cell(0, 10, "Top & Bottom Performers:", ln=True)
-    pdf.set_font("Noto", '', 10)
     for _, row in top_bottom_df.iterrows():
         pdf.cell(0, 8, f"{row['Label']}: {row['Business Area']} – {int(row['Amount']):,} NIS", ln=True)
     pdf.ln(8)
 
     # Scores & Recommendations
-    pdf.set_font("Noto", '', 12)
     pdf.cell(0, 10, "Performance Scores & Action Items:", ln=True)
-    pdf.set_font("Noto", '', 10)
     for area, row in area_perf.iterrows():
         score = row['Score']
         msg = f"{area}: Score {score}/10. "
         if score < 5:
-            msg += "Consider performance evaluation or cost review."
+            msg += "Performance review recommended."
         elif score > 8:
-            msg += "Strong performance – consider expansion or promotion."
+            msg += "Strong – consider promotion."
         else:
-            msg += "Stable – monitor monthly trends."
+            msg += "Stable."
         pdf.multi_cell(0, 8, msg)
     pdf.ln(8)
 
     # Detailed Records
-    pdf.set_font("Noto", '', 12)
     pdf.cell(0, 10, "Detailed Records:", ln=True)
-    pdf.set_font("Noto", '', 10)
     for _, row in data.iterrows():
         pdf.cell(0, 8, f"Business Area: {row['Business Area']}", ln=True)
         pdf.cell(0, 8, f"Date: {row['Date']} | Amount: {int(row['Amount']):,} NIS", ln=True)
@@ -169,11 +153,11 @@ if uploaded_file:
         for area, row in area_perf.iterrows():
             score = row['Score']
             if score < 5:
-                st.warning(f"{area}: Consider performance evaluation or cost review.")
+                st.warning(f"{area}: Performance review recommended.")
             elif score > 8:
-                st.success(f"{area}: Strong performance – consider expansion or promotion.")
+                st.success(f"{area}: Strong – consider promotion.")
             else:
-                st.info(f"{area}: Stable – monitor monthly trends.")
+                st.info(f"{area}: Stable.")
 
         st.subheader("📄 Generate PDF")
         if st.button("Download PDF Report"):
